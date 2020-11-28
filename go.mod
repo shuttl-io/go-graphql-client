@@ -1,4 +1,4 @@
-module github.com/shuttl-llc/go-graphql-client
+module github.com/shuttl-io/go-graphql-client
 
 go 1.13
 

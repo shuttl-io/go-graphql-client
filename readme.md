@@ -8,7 +8,7 @@ object to a graphql query as well as deserialize the response.
 
 ### Installation
 
-A normal go get should do the trick: `go get github.com/shuttl-llc/go-graphql-client`.
+A normal go get should do the trick: `go get github.com/shuttl-io/go-graphql-client`.
 
 ### Basics
 
@@ -21,7 +21,7 @@ included a simple HTTP transport that allows you to send the API and set headers
 package main
 
 import (
-    "github.com/shuttl-llc/go-graphql-client"
+    "github.com/shuttl-io/go-graphql-client"
 )
 
 func main() {
@@ -40,7 +40,7 @@ After that you can use a normal golang struct to make a request against your api
 package main
 
 import (
-    "github.com/shuttl-llc/go-graphql-client"
+    "github.com/shuttl-io/go-graphql-client"
 )
 
 type HeroObject struct {
@@ -96,7 +96,7 @@ is done, then calling `.WithVariable` on the request will format the query corre
 package main
 
 import (
-    "github.com/shuttl-llc/go-graphql-client"
+    "github.com/shuttl-io/go-graphql-client"
 )
 
 type HeroObject struct {
@@ -149,7 +149,7 @@ struct. This will not add the field to the query
 package main
 
 import (
-    "github.com/shuttl-llc/go-graphql-client"
+    "github.com/shuttl-io/go-graphql-client"
 )
 
 type HeroObject struct {
@@ -198,7 +198,7 @@ Sometimes it is necessary to alias a graphql field. To do that, use the JSON tag
 package main
 
 import (
-    "github.com/shuttl-llc/go-graphql-client"
+    "github.com/shuttl-io/go-graphql-client"
 )
 
 type HeroObject struct {
