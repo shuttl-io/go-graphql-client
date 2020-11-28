@@ -239,6 +239,55 @@ query($id: ID) {
 }
 ```
 
+## Full Working and Copy Pastable Code
+
+```golang
+package main
+
+import (
+	"fmt"
+
+	"github.com/shuttl-io/go-graphql-client"
+)
+
+type continent struct {
+	Code string `json:"code"`
+	Name string `json:"name"`
+}
+
+type continentsRequest struct {
+	Continents []continent `json:"continents" gql_params:"filter:ContinentFilterInput"`
+}
+
+type stringQuery struct {
+	Eq    string   `json:"eq,omitempty"`
+	Ne    string   `json:"ne,omitempty"`
+	In    []string `json:"in,omitempty"`
+	Nin   string   `json:"nin,omitempty"`
+	Regex string   `json:"regex,omitempty"`
+	Glob  string   `json:"glob,omitempty"`
+}
+
+type ContinentFilter struct {
+	Code stringQuery `json:"code"`
+}
+
+func main() {
+	client := graphql.NewClient(graphql.NewSimpleHTTPTransport("https://countries.trevorblades.com/"))
+	req := &continentsRequest{}
+	filter := ContinentFilter{}
+	filter.Code.Eq = "AF"
+	_, err := client.NewRequest().Query(req).WithVariable("filter", filter).Send()
+	if err != nil {
+		fmt.Println("ERROR:", err)
+	}
+	for _, continent := range req.Continents {
+		fmt.Println("Continent Code:", continent.Code, "Name:", continent.Name)
+		fmt.Println("========================================================")
+	}
+}
+```
+
 ## Contributions
 
 Contributions are 100% encouraged. This can take many forms. Just using this project is contribution enough.

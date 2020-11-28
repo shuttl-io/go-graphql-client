@@ -31,10 +31,10 @@ func NewMarshaler() *Marshaler {
 	}
 }
 
-func (g *Marshaler) marshalStruct(val reflect.Value, rootPart *QueryPart) error {
-	numFields := val.NumField()
+func (g *Marshaler) marshalStruct(tp reflect.Type, val reflect.Value, rootPart *QueryPart) error {
+	numFields := tp.NumField()
 	for i := 0; i < numFields; i++ {
-		field := val.Type().Field(i)
+		field := tp.Field(i)
 		gqlTags, hasGqlTags := field.Tag.Lookup("gql")
 		tags := newSet()
 		if hasGqlTags {
@@ -67,15 +67,15 @@ func (g *Marshaler) marshalStruct(val reflect.Value, rootPart *QueryPart) error 
 			}
 		}
 
-		g.marshal(val.Field(i), part)
+		g.marshal(tp.Field(i).Type, val.Field(i), part)
 		rootPart.SubFields = append(rootPart.SubFields, part)
 	}
 	return nil
 }
 
-func (g *Marshaler) marshal(val reflect.Value, parent *QueryPart) error {
+func (g *Marshaler) marshal(tp reflect.Type, val reflect.Value, parent *QueryPart) error {
 	mType := reflect.TypeOf(new(GqlMarshaler)).Elem()
-	if val.Type().Implements(mType) {
+	if tp.Implements(mType) {
 		m := val.Interface().(GqlMarshaler)
 		queryParties, err := m.MarshalGql(g)
 		if err != nil {
@@ -84,13 +84,18 @@ func (g *Marshaler) marshal(val reflect.Value, parent *QueryPart) error {
 		parent.SubFields = append(parent.SubFields, queryParties...)
 		return nil
 	}
-	switch kind := val.Kind(); kind {
+	switch kind := tp.Kind(); kind {
 	case reflect.Ptr:
-		return g.marshal(val.Elem(), parent)
+		if val.IsNil() {
+			val = reflect.New(tp.Elem())
+		}
+		return g.marshal(tp.Elem(), val.Elem(), parent)
 	case reflect.Struct:
-		return g.marshalStruct(val, parent)
+		return g.marshalStruct(tp, val, parent)
 	case reflect.String:
 		return nil
+	case reflect.Slice:
+		return g.marshal(tp.Elem(), reflect.New(tp.Elem()).Elem(), parent)
 	default:
 		return fmt.Errorf("unrecognized kind: %s. this isn't supposed to happen, let us know if it does", kind)
 	}
@@ -98,12 +103,13 @@ func (g *Marshaler) marshal(val reflect.Value, parent *QueryPart) error {
 
 // MarshalToGraphql takes the object and returns a new graphql query
 func (g *Marshaler) MarshalToGraphql(obj interface{}, argsToInclude ...string) (string, error) {
+	tp := reflect.TypeOf(obj)
 	val := reflect.ValueOf(obj)
 	g.rootPart = NewQueryPart("")
-	if val.Kind() != reflect.Ptr {
+	if tp.Kind() != reflect.Ptr {
 		return "", errors.New("object should be a pointer")
 	}
-	err := g.marshal(val, g.rootPart)
+	err := g.marshal(tp, val, g.rootPart)
 	for _, arg := range argsToInclude {
 		g.rootPart.markArgAsNeeded(arg)
 	}

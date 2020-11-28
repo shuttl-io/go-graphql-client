@@ -75,15 +75,15 @@ func (s *SimpleHTTPTransport) Transport(req Request) (Response, error) {
 		return response, err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return response, fmt.Errorf("error from the api: %s", resp.Status)
-	}
 	response.HttpResponse = resp
 	bf := bytes.Buffer{}
 	if _, err = bf.ReadFrom(resp.Body); err != nil {
 		return response, err
 	}
 	response.Payload = bf.Bytes()
+	if resp.StatusCode == 500 {
+		return response, fmt.Errorf("error from the api: %s", resp.Status)
+	}
 	data := &graphqlResponse{
 		Data: req.GetInterface(),
 	}

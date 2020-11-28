@@ -102,30 +102,6 @@ func TestCanOmit(t *testing.T) {
 	assert.Equal(noSpaces(realQ), noSpaces(q))
 }
 
-func TestJsonAndGqlCanBeDifferent(t *testing.T) {
-	realQ := `{
-  example{
-	message
-	boolean
-	number
-  }
-}
-`
-	marshaler := NewMarshaler()
-	marshaler.IdentLevel = 2
-	assert := assert.New(t)
-	q, err := marshaler.MarshalToGraphql(&struct {
-		Example struct {
-			Message string `gql:"message" json:"thisValueIsForJsonOnly"`
-			Boolean bool   `json:"boolean"`
-			Number  int    `json:"number"`
-			Omit    string `json:"will_omit_in_gql" gql:"omit"`
-		} `json:"example" gql_params:"name:Int"`
-	}{})
-	assert.NoError(err)
-	assert.Equal(noSpaces(realQ), noSpaces(q))
-}
-
 func TestCanConvertToString(t *testing.T) {
 	assert := assert.New(t)
 	marshaler := NewMarshaler()
@@ -180,4 +156,54 @@ func TestMakeArgRequiredFromMarshal(t *testing.T) {
 		} `json:"example" gql_params:"name:Int, foo:String"`
 	}{}, "name", "foo")
 	assert.Len(marshaler.rootPart.collectArgs(), 2)
+}
+
+type testExample struct {
+	Message string `json:"tst"`
+}
+
+func TestCanConvertArray(t *testing.T) {
+	realQ := `{
+  test{
+	example{
+		tst
+	}
+  }
+}
+`
+	marshaler := NewMarshaler()
+	marshaler.IdentLevel = 2
+	assert := assert.New(t)
+	q, err := marshaler.MarshalToGraphql(&struct {
+		Example struct {
+			Test []testExample `json:"example" gql_params:"name:Int"`
+		} `json:"test"`
+	}{})
+	assert.NoError(err)
+	assert.Equal(noSpaces(realQ), noSpaces(q))
+}
+
+func TestCanConvertMarshalerSlice(t *testing.T) {
+	realQ := `{
+  example{
+    someMock{
+      someMockField1{
+        someDeepMock
+        someotherDeepMock
+      }
+    someMockField2
+  }
+}
+}
+`
+	marshaler := NewMarshaler()
+	marshaler.IdentLevel = 2
+	assert := assert.New(t)
+	q, err := marshaler.MarshalToGraphql(&struct {
+		Example struct {
+			SomeMock []someMock `json:"someMock"`
+		} `json:"example" gql_params:"name:Int"`
+	}{})
+	assert.NoError(err)
+	assert.Equal(noSpaces(realQ), noSpaces(q))
 }
