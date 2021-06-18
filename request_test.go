@@ -123,3 +123,25 @@ func TestCanBuildASimpleQueryWithMultipleArgs(t *testing.T) {
 }
 `, reqStr)
 }
+
+func TestJsonRequest(t *testing.T) {
+	assert := assert.New(t)
+	req := newReq()
+	input := struct {
+		Name string `json:"name"`
+	}{
+		Name: "foo",
+	}
+	req.Mutation(&struct {
+		SomeOperation struct {
+			Response string `json:"response"`
+		} `json:"example" gql_params:"input:FooObj"`
+	}{}).WithVariable("input", input)
+	reqStr := req.GetQuery()
+	assert.Equal(`mutation($input:FooObj){
+    example(input:$input){
+        response
+    }
+}
+`, reqStr)
+}
